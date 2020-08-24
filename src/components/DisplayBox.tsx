@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { actions } from '../store/reducers/gridReducer';
-import {  useQuery } from 'urql';
+import {  useQuery, useSubscription } from 'urql';
 import LinearProgress from '@material-ui/core/LinearProgress';
 import { IState } from '../store';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -12,6 +12,7 @@ interface objtype {
 interface valSelc {
   selectedValue?: objtype[];
 }
+
 
 
 const query = `query($input: [MeasurementQuery]!) {
@@ -25,6 +26,16 @@ const query = `query($input: [MeasurementQuery]!) {
     }
   }
 }`;
+const subquery = `subscription {
+  newMeasurement{
+      metric
+      at
+      value
+      unit
+    }
+
+}`;
+
 
 const current_time = new Date().getTime();
 // Simple line chart in recharts accepts data in the format of data = [{},{}...]
@@ -104,6 +115,14 @@ const DisplayChart: React.FC<any> = (selected: valSelc) => {
     pollInterval: 1300, // 1.3 seconds as per requirement
     requestPolicy:'network-only'
   });
+
+  // const [res] = useSubscription({
+  //   query:subquery,
+  //   variables: {},
+  // }, (res:objtype[], measurements:objtype[] =[]) =>{
+  //   if(res.newMeasurement)
+  //     return [res.newMeasurement, ...measurements];
+  // });
   const { fetching, data, error } = result;
   useEffect(() => {
     if (error) {
@@ -112,6 +131,7 @@ const DisplayChart: React.FC<any> = (selected: valSelc) => {
     }
     if (!data) return;
     dispatch(actions.metricsDataRecevied(data));
+    console.log(data);
   }, [dispatch, data, error]);
 
   if (fetching) return <LinearProgress />;
