@@ -13,6 +13,7 @@ interface valSelc {
   selectedValue?: objtype[];
 }
 
+
 const query = `query($input: [MeasurementQuery]!) {
   getMultipleMeasurements(input: $input) {
     metric
@@ -26,27 +27,32 @@ const query = `query($input: [MeasurementQuery]!) {
 }`;
 
 const current_time = new Date().getTime();
+// Simple line chart in recharts accepts data in the format of data = [{},{}...]
+// data format coming from graphql // [{"metric:""","measurements":[{metric: "waterTemp", at: 1598244435249, value: 117.54, unit: "",__typename:""],"__typename":""}...]
+// convert input format to rechart supported format.ie [{measurements.metricname: measurements.metricvalue, at: measurements.at}....]
 
-
-const chartdata = (data: any) => { //convert Metric data to chart supported format
+const chartdata = (data: objtype[]) => { // convert Metric data to chart supported format
+  // console.log(data); // [{"metric:""","measurements":[],"__typename":""},{}]
 
   if (data.length > 0) {
-    let temp :any[] =[];
-    let datalen = data[0].measurements.length;
+    let temp :objtype[] =[];
+    let datalen = data[0].measurements.length; 
+    // console.log(data[0].measurements.length);
 
-    for (let i = 0; i < datalen; i++) {
+    for (let i = 0; i < datalen; i++) { // iterate over measurements[] and extract each object  {measurements.metricname: measurements.metricvalue, at: measurements.at} into [].
       let obj: objtype = {};
-      for (let j = 0; j < data.length; j++) {
-        if (data[j].measurements[i]) {
+      for (let j = 0; j < data.length; j++) { 
+        if (data[j].measurements[i]) { 
           obj[data[j].measurements[i].metric] = data[j].measurements[i].value;
           obj['at'] = new Date(data[j].measurements[i].at).toLocaleTimeString().replace(/:\d+ /, ' '); //change epoch to HH:MM AM/PM
         }
       }
       temp.push(obj);
     }
-    return temp;
+    // console.log(temp);
+    return temp; // converted format
   } else {
-    return [];
+    return []; // no data avaialble
   }
 };
 
